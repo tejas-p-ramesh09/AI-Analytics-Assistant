@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.express as px
 
 from src.Analytics.kpis import get_overall_kpis, get_category_performance
 from src.Analytics.sales_analysis import get_sales_by_region, get_monthly_sales_trend
@@ -36,13 +37,29 @@ st.dataframe(category_df, use_container_width=True)
 # Sales by region
 st.subheader("Sales by Region")
 region_df = get_sales_by_region()
-st.bar_chart(region_df.set_index("region")["total_sales"])
+fig_region = px.bar(
+    region_df,
+    x="region",
+    y="total_sales",
+    title="Total Sales by Region",
+    text_auto=".2s"
+)
+
+st.plotly_chart(fig_region, use_container_width=True)
 
 
 # Monthly sales trend
 st.subheader("Monthly Sales Trend")
 monthly_df = get_monthly_sales_trend()
-st.line_chart(monthly_df.set_index("month")["total_sales"])
+fig_monthly = px.line(
+    monthly_df,
+    x="month",
+    y="total_sales",
+    title="Monthly Sales Trend",
+    markers=True
+)
+
+st.plotly_chart(fig_monthly, use_container_width=True)
 
 
 # Top customers
