@@ -1,9 +1,9 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-
+from src.Analytics.insights import generate_insights
 from src.Analytics.data_loader import get_sales_dataset
-
+from src.Analytics.product_analysis import get_worst_subcategories
 
 st.set_page_config(
     page_title="AI Analytics Assistant",
@@ -59,6 +59,10 @@ if selected_category != "All":
 if selected_segment != "All":
     filtered_df = filtered_df[filtered_df["segment"] == selected_segment]
 
+st.subheader("Executive Insights")
+insights = generate_insights(filtered_df)
+for insight in insights:
+    st.info(insight)
 
 # KPI cards
 total_sales = filtered_df["sales"].sum()
@@ -160,3 +164,29 @@ customers_df = (
 )
 
 st.dataframe(customers_df, use_container_width=True)
+
+st.subheader("Worst Performing Sub-Categories")
+
+worst_df = get_worst_subcategories()
+
+fig_worst = px.bar(
+    worst_df,
+    x="total_profit",
+    y="sub_category",
+    orientation="h",
+    title="Lowest Profit Sub-Categories",
+    text_auto=".2s"
+)
+st.plotly_chart(fig_worst, use_container_width=True)
+st.dataframe(worst_df, use_container_width=True)
+
+st.subheader("Business Recommendations")
+st.success(
+    "Focus sales efforts on high-performing Technology products."
+)
+st.warning(
+    "Review pricing and discount strategies for Furniture and Tables."
+)
+st.info(
+    "Increase marketing investment in the Central region where revenue is strongest."
+)
