@@ -1,9 +1,8 @@
 import streamlit as st
 import plotly.express as px
+import pandas as pd
 
-from src.Analytics.kpis import get_overall_kpis, get_category_performance
-from src.Analytics.sales_analysis import get_sales_by_region, get_monthly_sales_trend
-from src.Analytics.customer_analysis import get_top_customers
+from src.Analytics.data_loader import get_sales_dataset
 
 
 st.set_page_config(
@@ -12,31 +11,101 @@ st.set_page_config(
 )
 
 st.title("AI-Powered Business Analytics Assistant")
-st.write("Business analytics dashboard powered by PostgreSQL and Python.")
+st.write("Interactive business analytics dashboard powered by PostgreSQL and Python.")
 
 
-# Overall KPIs
-kpis = get_overall_kpis().iloc[0]
+# Load data
+df = get_sales_dataset()
+df["order_date"] = pd.to_datetime(df["order_date"])
+df["year"] = df["order_date"].dt.year
+
+
+# Sidebar filters
+st.sidebar.header("Filters")
+
+selected_year = st.sidebar.selectbox(
+    "Year",
+    ["All"] + sorted(df["year"].unique().tolist())
+)
+
+selected_region = st.sidebar.selectbox(
+    "Region",
+    ["All"] + sorted(df["region"].unique().tolist())
+)
+
+selected_category = st.sidebar.selectbox(
+    "Category",
+    ["All"] + sorted(df["category"].unique().tolist())
+)
+
+selected_segment = st.sidebar.selectbox(
+    "Customer Segment",
+    ["All"] + sorted(df["segment"].unique().tolist())
+)
+
+
+# Apply filters
+filtered_df = df.copy()
+
+if selected_year != "All":
+    filtered_df = filtered_df[filtered_df["year"] == selected_year]
+
+if selected_region != "All":
+    filtered_df = filtered_df[filtered_df["region"] == selected_region]
+
+if selected_category != "All":
+    filtered_df = filtered_df[filtered_df["category"] == selected_category]
+
+if selected_segment != "All":
+    filtered_df = filtered_df[filtered_df["segment"] == selected_segment]
+
+
+# KPI cards
+total_sales = filtered_df["sales"].sum()
+total_profit = filtered_df["profit"].sum()
+total_orders = filtered_df["order_id"].nunique()
+total_quantity = filtered_df["quantity"].sum()
 
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric("Total Sales", f"${kpis['total_sales']:,.2f}")
-col2.metric("Total Profit", f"${kpis['total_profit']:,.2f}")
-col3.metric("Total Orders", f"{int(kpis['total_orders']):,}")
-col4.metric("Units Sold", f"{int(kpis['total_quantity']):,}")
-
+col1.metric("Total Sales", f"${total_sales:,.2f}")
+col2.metric("Total Profit", f"${total_profit:,.2f}")
+col3.metric("Total Orders", f"{total_orders:,}")
+col4.metric("Units Sold", f"{int(total_quantity):,}")
 
 st.divider()
 
-# Category performance
+
+# Category Performance
 st.subheader("Category Performance")
-category_df = get_category_performance()
+
+category_df = (
+    filtered_df.groupby("category")
+    .agg(
+        total_sales=("sales", "sum"),
+        total_profit=("profit", "sum"),
+        units_sold=("quantity", "sum")
+    )
+    .reset_index()
+)
+
+category_df["profit_margin_pct"] = (
+    category_df["total_profit"] / category_df["total_sales"] * 100
+).round(2)
+
 st.dataframe(category_df, use_container_width=True)
 
 
-# Sales by region
+# Sales by Region
 st.subheader("Sales by Region")
-region_df = get_sales_by_region()
+
+region_df = (
+    filtered_df.groupby("region")
+    .agg(total_sales=("sales", "sum"))
+    .reset_index()
+    .sort_values("total_sales", ascending=False)
+)
+
 fig_region = px.bar(
     region_df,
     x="region",
@@ -48,9 +117,22 @@ fig_region = px.bar(
 st.plotly_chart(fig_region, use_container_width=True)
 
 
-# Monthly sales trend
+# Monthly Sales Trend
 st.subheader("Monthly Sales Trend")
-monthly_df = get_monthly_sales_trend()
+
+monthly_df = (
+    filtered_df.copy()
+)
+
+monthly_df["month"] = monthly_df["order_date"].apply(lambda x: x.replace(day=1))
+
+monthly_df = (
+    monthly_df.groupby("month")
+    .agg(total_sales=("sales", "sum"))
+    .reset_index()
+    .sort_values("month")
+)
+
 fig_monthly = px.line(
     monthly_df,
     x="month",
@@ -62,7 +144,19 @@ fig_monthly = px.line(
 st.plotly_chart(fig_monthly, use_container_width=True)
 
 
-# Top customers
+# Top Customers
 st.subheader("Top Customers")
-customers_df = get_top_customers()
+
+customers_df = (
+    filtered_df.groupby(["customer_name", "segment"])
+    .agg(
+        total_sales=("sales", "sum"),
+        total_profit=("profit", "sum"),
+        total_orders=("order_id", "nunique")
+    )
+    .reset_index()
+    .sort_values("total_sales", ascending=False)
+    .head(10)
+)
+
 st.dataframe(customers_df, use_container_width=True)
