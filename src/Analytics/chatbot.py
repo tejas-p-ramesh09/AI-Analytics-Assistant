@@ -1,5 +1,6 @@
 from src.Analytics.explanations import explain_business_metric
 from src.Analytics.trends import answer_trend_question
+from src.Analytics.forecasting import forecast_next_month_sales
 
 def compare_entities(df, column_name, entity_1, entity_2):
 
@@ -66,6 +67,20 @@ def answer_question(question: str, df):
     )
     if trend_answer:
         return trend_answer, trend_df
+    
+    if (
+        "forecast" in question
+        or "predict" in question
+        or "expected" in question
+    ):
+
+        forecast_value, history_df = (
+            forecast_next_month_sales(df)
+        )
+        return (
+            f"Predicted next month sales are ${forecast_value:,.2f}.",
+            history_df
+        )
     
     if "compare" in question:
 
