@@ -4,6 +4,7 @@ import pandas as pd
 from src.Analytics.insights import generate_insights
 from src.Analytics.data_loader import get_sales_dataset
 from src.Analytics.product_analysis import get_worst_subcategories
+from src.Analytics.chatbot import answer_question
 
 st.set_page_config(
     page_title="AI Analytics Assistant",
@@ -59,10 +60,43 @@ if selected_category != "All":
 if selected_segment != "All":
     filtered_df = filtered_df[filtered_df["segment"] == selected_segment]
 
+# Executive insights
 st.subheader("Executive Insights")
 insights = generate_insights(filtered_df)
 for insight in insights:
     st.info(insight)
+
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+st.header("Ask Your Data")
+question = st.text_input(
+    "Ask a business question",
+    placeholder="Which region has the highest sales?"
+)
+if question:
+    answer, result_df = answer_question(question)
+    st.session_state.chat_history.append(
+        {
+            "question": question,
+            "answer": answer
+        }
+    )
+    st.success(answer)
+    if result_df is not None:
+        st.dataframe(result_df)
+    st.subheader("Conversation History")
+
+for item in reversed(st.session_state.chat_history):
+    st.markdown(
+        f"**Question:** {item['question']}"
+    )
+    st.markdown(
+        f"**Answer:** {item['answer']}"
+    )
+    st.divider()
+
 
 # KPI cards
 total_sales = filtered_df["sales"].sum()
