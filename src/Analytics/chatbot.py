@@ -22,13 +22,33 @@ def compare_entities(df, column_name, entity_1, entity_2):
     if len(comparison_df) < 2:
         return "I could not find both items to compare in the selected data.", comparison_df
 
-    best = comparison_df.sort_values("total_profit", ascending=False).iloc[0]
+    comparison_df = comparison_df.sort_values(
+    "total_profit",
+    ascending=False
+)
+
+    best = comparison_df.iloc[0]
+    other = comparison_df.iloc[1]
+
+    profit_difference = (
+    best["total_profit"] - other["total_profit"]
+)
 
     answer = (
-        f"{best[column_name]} performs better based on profit, "
-        f"with ${best['total_profit']:,.2f} profit and "
-        f"{best['profit_margin_pct']:.2f}% profit margin."
-    )
+        f"{best[column_name]} generated "
+        f"${best['total_sales']:,.0f} sales and "
+        f"${best['total_profit']:,.0f} profit "
+        f"({best['profit_margin_pct']:.2f}% margin).\n\n"
+
+        f"{other[column_name]} generated "
+        f"${other['total_sales']:,.0f} sales and "
+        f"${other['total_profit']:,.0f} profit "
+        f"({other['profit_margin_pct']:.2f}% margin).\n\n"
+
+        f"{best[column_name]} outperformed "
+        f"{other[column_name]} by "
+        f"${profit_difference:,.0f} profit."
+)
 
     return answer, comparison_df
 
