@@ -131,6 +131,15 @@ def answer_trend_question(question, df):
             f"{int(best_growth['year'])} had the fastest sales growth at {best_growth['sales_growth_pct']:.2f}% compared to the previous year.",
             yearly_df
         )
+    
+    if "2013" in question and "2014" in question:
+        return compare_years(df, 2013, 2014)
+
+    if "2012" in question and "2013" in question:
+        return compare_years(df, 2012, 2013)
+
+    if "2011" in question and "2012" in question:
+        return compare_years(df, 2011, 2012)
 
     return None, None
 
@@ -157,3 +166,32 @@ def analyze_yearly_trends(df):
     )
 
     return yearly_df
+
+
+
+def compare_years(df, year_1, year_2):
+
+    yearly_df = analyze_yearly_trends(df)
+
+    y1 = yearly_df[yearly_df["year"] == year_1]
+    y2 = yearly_df[yearly_df["year"] == year_2]
+
+    if y1.empty or y2.empty:
+        return None, None
+
+    sales_1 = y1.iloc[0]["total_sales"]
+    sales_2 = y2.iloc[0]["total_sales"]
+
+    growth_pct = (
+        (sales_2 - sales_1)
+        / sales_1
+        * 100
+    )
+
+    answer = (
+        f"Sales increased from ${sales_1:,.2f} in {year_1} "
+        f"to ${sales_2:,.2f} in {year_2}, "
+        f"representing {growth_pct:.2f}% year-over-year growth."
+    )
+
+    return answer, yearly_df
