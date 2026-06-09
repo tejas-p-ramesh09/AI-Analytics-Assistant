@@ -9,6 +9,7 @@ from src.Analytics.insights import generate_insights, generate_recommendations
 from src.Analytics.report_generator import generate_report
 from src.Analytics.pdf_generator import create_pdf
 from src.Analytics.alerts import generate_alerts
+from src.Analytics.forecasting import forecast_next_month_sales
 
 st.set_page_config(
     page_title="AI Analytics Assistant",
@@ -195,6 +196,28 @@ fig_monthly = px.line(
 )
 
 st.plotly_chart(fig_monthly, use_container_width=True)
+
+
+# Sales Forecast
+st.subheader("Sales Forecast")
+
+forecast_value, forecast_chart_df = forecast_next_month_sales(filtered_df)
+
+st.metric(
+    "Predicted Next Month Sales",
+    f"${forecast_value:,.2f}"
+)
+
+fig_forecast = px.line(
+    forecast_chart_df,
+    x="month",
+    y="total_sales",
+    color="type",
+    markers=True,
+    title="Historical Sales with Next Month Forecast"
+)
+
+st.plotly_chart(fig_forecast, use_container_width=True)
 
 
 # Top Customers
