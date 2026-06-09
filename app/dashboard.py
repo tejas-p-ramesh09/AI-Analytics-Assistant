@@ -7,6 +7,7 @@ from src.Analytics.product_analysis import get_worst_subcategories
 from src.Analytics.chatbot import answer_question
 from src.Analytics.insights import generate_insights, generate_recommendations
 from src.Analytics.report_generator import generate_report
+from src.Analytics.pdf_generator import create_pdf
 
 st.set_page_config(
     page_title="AI Analytics Assistant",
@@ -232,4 +233,23 @@ st.text_area(
     "Generated Report",
     value=report_text,
     height=400
+)
+
+
+st.download_button(
+    label="Download Executive Report",
+    data=report_text,
+    file_name="executive_report.txt",
+    mime="text/plain"
+)
+
+
+
+pdf_file = create_pdf(report_text)
+
+st.download_button(
+    label="Download Executive Report as PDF",
+    data=pdf_file,
+    file_name="executive_report.pdf",
+    mime="application/pdf"
 )
