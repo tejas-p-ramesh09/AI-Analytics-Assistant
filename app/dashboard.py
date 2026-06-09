@@ -8,6 +8,7 @@ from src.Analytics.chatbot import answer_question
 from src.Analytics.insights import generate_insights, generate_recommendations
 from src.Analytics.report_generator import generate_report
 from src.Analytics.pdf_generator import create_pdf
+from src.Analytics.alerts import generate_alerts
 
 st.set_page_config(
     page_title="AI Analytics Assistant",
@@ -70,16 +71,24 @@ for insight in insights:
     st.info(insight)
 
 
+# Business recommendations
+st.subheader("Business Alerts")
+alerts = generate_alerts(filtered_df)
+if alerts:
+    for alert in alerts:
+        st.warning(alert)
+else:
+    st.success("No business alerts detected.")
+
+
+# Chatbot interface
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-
 st.header("Ask Your Data")
-
 question = st.text_input(
     "Ask a business question",
     placeholder="Which region has the highest sales?"
 )
-
 if question:
     answer, result_df = answer_question(question, filtered_df)
     st.session_state.chat_history.append(
@@ -91,7 +100,6 @@ if question:
     st.code(answer)
     if result_df is not None:
         st.dataframe(result_df, use_container_width=True)
-
 st.subheader("Conversation History")
 
 if st.button("Clear Chat History"):
