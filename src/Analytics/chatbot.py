@@ -1,8 +1,5 @@
-from src.Analytics.kpis import get_category_performance
-from src.Analytics.sales_analysis import get_sales_by_region
-from src.Analytics.customer_analysis import get_top_customers
-from src.Analytics.product_analysis import get_worst_subcategories
 from src.Analytics.explanations import explain_business_metric
+from src.Analytics.trends import answer_trend_question
 
 def compare_entities(df, column_name, entity_1, entity_2):
 
@@ -42,6 +39,13 @@ def answer_question(question: str, df):
 
     if df.empty:
         return "No data available for the selected filters.", None
+    
+    trend_answer, trend_df = answer_trend_question(
+        question,
+        df
+    )
+    if trend_answer:
+        return trend_answer, trend_df
     
     if "compare" in question:
 
