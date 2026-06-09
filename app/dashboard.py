@@ -74,10 +74,12 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 st.header("Ask Your Data")
+
 question = st.text_input(
     "Ask a business question",
     placeholder="Which region has the highest sales?"
 )
+
 if question:
     answer, result_df = answer_question(question, filtered_df)
     st.session_state.chat_history.append(
@@ -86,18 +88,20 @@ if question:
             "answer": answer
         }
     )
-    st.success(answer)
+    st.code(answer)
     if result_df is not None:
-        st.dataframe(result_df)
-    st.subheader("Conversation History")
+        st.dataframe(result_df, use_container_width=True)
 
-for item in reversed(st.session_state.chat_history):
-    st.markdown(
-        f"**Question:** {item['question']}"
-    )
-    st.markdown(
-        f"**Answer:** {item['answer']}"
-    )
+st.subheader("Conversation History")
+
+if st.button("Clear Chat History"):
+    st.session_state.chat_history = []
+    st.rerun()
+recent_history = st.session_state.chat_history[-5:]
+for item in reversed(recent_history):
+    st.markdown(f"**Question:** {item['question']}")
+    st.write("**Answer:**")
+    st.code(item["answer"])
     st.divider()
 
 
