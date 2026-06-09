@@ -8,6 +8,7 @@ def generate_report(df):
     total_quantity = df["quantity"].sum()
 
     insights = generate_insights(df)
+    recommendations = generate_recommendations(df)
 
     report = f"""
 Executive Business Summary
@@ -23,11 +24,9 @@ Key Insights:
     for insight in insights:
         report += f"- {insight}\n"
 
-    report += """
-Recommendations:
-- Focus sales efforts on high-performing Technology products.
-- Review pricing and discount strategies for Furniture and Tables.
-- Increase marketing investment in the Central region where revenue is strongest.
-"""
+    report += "\nRecommendations:\n"
+
+    for recommendation in recommendations:
+        report += f"- {recommendation}\n"
 
     return report
