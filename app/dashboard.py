@@ -5,6 +5,8 @@ from src.Analytics.insights import generate_insights
 from src.Analytics.data_loader import get_sales_dataset
 from src.Analytics.product_analysis import get_worst_subcategories
 from src.Analytics.chatbot import answer_question
+from src.Analytics.insights import generate_insights, generate_recommendations
+from src.Analytics.report_generator import generate_report
 
 st.set_page_config(
     page_title="AI Analytics Assistant",
@@ -76,7 +78,7 @@ question = st.text_input(
     placeholder="Which region has the highest sales?"
 )
 if question:
-    answer, result_df = answer_question(question)
+    answer, result_df = answer_question(question, filtered_df)
     st.session_state.chat_history.append(
         {
             "question": question,
@@ -215,12 +217,19 @@ st.plotly_chart(fig_worst, use_container_width=True)
 st.dataframe(worst_df, use_container_width=True)
 
 st.subheader("Business Recommendations")
-st.success(
-    "Focus sales efforts on high-performing Technology products."
-)
-st.warning(
-    "Review pricing and discount strategies for Furniture and Tables."
-)
-st.info(
-    "Increase marketing investment in the Central region where revenue is strongest."
+
+recommendations = generate_recommendations(filtered_df)
+
+for recommendation in recommendations:
+    st.success(recommendation)
+
+
+st.subheader("Executive Report")
+
+report_text = generate_report(filtered_df)
+
+st.text_area(
+    "Generated Report",
+    value=report_text,
+    height=400
 )

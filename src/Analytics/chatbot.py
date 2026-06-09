@@ -4,103 +4,109 @@ from src.Analytics.customer_analysis import get_top_customers
 from src.Analytics.product_analysis import get_worst_subcategories
 
 
-def answer_question(question: str):
+def answer_question(question: str, df):
 
     question = question.lower()
 
-    region_keywords = [
-        "region",
-        "area",
-        "market"
-    ]
+    region_keywords = ["region", "area", "market"]
+    sales_keywords = ["sales", "revenue", "best", "highest"]
+    customer_keywords = ["customer", "buyer", "client"]
+    category_keywords = ["category", "categories"]
+    profit_keywords = ["profit", "margin", "profitable"]
+    worst_keywords = ["worst", "loss", "underperform", "underperforming", "lowest"]
 
-    sales_keywords = [
-        "sales",
-        "revenue",
-        "best",
-        "highest"
-    ]
-
-    customer_keywords = [
-        "customer",
-        "buyer",
-        "client"
-    ]
-
-    category_keywords = [
-        "category",
-        "categories"
-    ]
-
-    profit_keywords = [
-        "profit",
-        "margin",
-        "profitable"
-    ]
-
-    worst_keywords = [
-        "worst",
-        "loss",
-        "underperform",
-        "underperforming",
-        "lowest"
-    ]
+    if df.empty:
+        return "No data available for the selected filters.", None
 
     if (
         any(word in question for word in region_keywords)
-        and
-        any(word in question for word in sales_keywords)
+        and any(word in question for word in sales_keywords)
     ):
-        df = get_sales_by_region()
+        result_df = (
+            df.groupby("region")
+            .agg(
+                total_sales=("sales", "sum"),
+                total_profit=("profit", "sum")
+            )
+            .reset_index()
+            .sort_values("total_sales", ascending=False)
+        )
 
-        top = df.iloc[0]
+        top = result_df.iloc[0]
 
         return (
-            f"{top['region']} has the highest sales with "
-            f"${top['total_sales']:,.2f}.",
-            df
+            f"{top['region']} has the highest sales with ${top['total_sales']:,.2f} for the selected filters.",
+            result_df
         )
 
     if (
         any(word in question for word in category_keywords)
-        and
-        any(word in question for word in profit_keywords)
+        and any(word in question for word in profit_keywords)
     ):
-        df = get_category_performance()
+        result_df = (
+            df.groupby("category")
+            .agg(
+                total_sales=("sales", "sum"),
+                total_profit=("profit", "sum"),
+                units_sold=("quantity", "sum")
+            )
+            .reset_index()
+        )
 
-        best = df.sort_values(
-            "total_profit",
-            ascending=False
-        ).iloc[0]
+        result_df["profit_margin_pct"] = (
+            result_df["total_profit"] / result_df["total_sales"] * 100
+        ).round(2)
+
+        best = result_df.sort_values("total_profit", ascending=False).iloc[0]
 
         return (
-            f"{best['category']} is the most profitable "
-            f"category with ${best['total_profit']:,.2f} profit.",
-            df
+            f"{best['category']} is the most profitable category with ${best['total_profit']:,.2f} profit for the selected filters.",
+            result_df.sort_values("total_profit", ascending=False)
         )
 
     if any(word in question for word in customer_keywords):
 
-        df = get_top_customers()
+        result_df = (
+            df.groupby(["customer_name", "segment"])
+            .agg(
+                total_sales=("sales", "sum"),
+                total_profit=("profit", "sum"),
+                total_orders=("order_id", "nunique")
+            )
+            .reset_index()
+            .sort_values("total_sales", ascending=False)
+            .head(10)
+        )
 
-        top = df.iloc[0]
+        top = result_df.iloc[0]
 
         return (
-            f"{top['customer_name']} is the top customer "
-            f"with ${top['total_sales']:,.2f} in sales.",
-            df
+            f"{top['customer_name']} is the top customer with ${top['total_sales']:,.2f} in sales for the selected filters.",
+            result_df
         )
 
     if any(word in question for word in worst_keywords):
 
-        df = get_worst_subcategories()
+        result_df = (
+            df.groupby("sub_category")
+            .agg(
+                total_sales=("sales", "sum"),
+                total_profit=("profit", "sum")
+            )
+            .reset_index()
+            .sort_values("total_profit", ascending=True)
+            .head(10)
+        )
 
-        worst = df.iloc[0]
+        result_df["profit_margin_pct"] = (
+            result_df["total_profit"] / result_df["total_sales"] * 100
+        ).round(2)
+
+        worst = result_df.iloc[0]
 
         return (
-            f"{worst['sub_category']} is the worst performing "
-            f"sub-category with ${worst['total_profit']:,.2f} profit.",
-            df
+            f"{worst['sub_category']} is the worst performing sub-category with ${worst['total_profit']:,.2f} profit for the selected filters.",
+            result_df
         )
 
     return (
