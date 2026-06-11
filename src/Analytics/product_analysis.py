@@ -1,7 +1,12 @@
 from sqlalchemy import create_engine
 import pandas as pd
 
-DATABASE_URL = "postgresql+psycopg2://tejaspramesh@localhost:5432/ai_analytics_assistant"
+import os
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg2://tejaspramesh@localhost:5432/ai_analytics_assistant"
+)
 
 
 def get_worst_subcategories():
