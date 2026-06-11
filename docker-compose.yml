@@ -1,0 +1,26 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: ai_analytics_db
+    environment:
+      POSTGRES_USER: tejas
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ai_analytics_assistant
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: ai_analytics_app
+    ports:
+      - "8501:8501"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://tejas:password@postgres:5432/ai_analytics_assistant
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
